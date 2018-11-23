@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<string-array name="sites">
+		<item>笔趣阁</item>
+		<item>笔趣阁1</item>
+		<item>笔趣阁2</item>
+		<item>笔趣阁3</item>
+	</string-array>
+
+</resources>
