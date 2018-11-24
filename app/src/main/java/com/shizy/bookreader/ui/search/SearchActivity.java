@@ -2,6 +2,7 @@ package com.shizy.bookreader.ui.search;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -15,6 +16,11 @@ import com.shizy.bookreader.R;
 import com.shizy.bookreader.bean.Book;
 import com.shizy.bookreader.site.Site;
 import com.shizy.bookreader.site.SiteFactory;
+import com.shizy.bookreader.ui.base.BaseObserver;
+import com.shizy.bookreader.ui.base.activity.BaseActivity;
+import com.shizy.bookreader.ui.base.adapter.BaseAdapter;
+import com.shizy.bookreader.ui.content.ContentActivity;
+import com.shizy.bookreader.util.RxJavaUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +28,13 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.observers.DisposableObserver;
 
-public class SearchActivity extends AppCompatActivity {
+public class SearchActivity extends BaseActivity {
 
 	private static final String TAG = SearchActivity.class.getSimpleName();
 
@@ -36,6 +47,16 @@ public class SearchActivity extends AppCompatActivity {
 		@Override
 		public void onNothingSelected(AdapterView<?> parent) {
 
+		}
+	};
+
+	private BaseAdapter.OnItemClickListener mOnItemClickListener = new BaseAdapter.OnItemClickListener() {
+		@Override
+		public void onItemClick(View view, int position) {
+			Book book = mAdapter.getItem(position);
+			if (book != null) {
+				ContentActivity.launch(SearchActivity.this, book);
+			}
 		}
 	};
 
@@ -99,15 +120,11 @@ public class SearchActivity extends AppCompatActivity {
 	private void initRecyclerView() {
 		mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 		mAdapter = new SearchAdapter(this);
+		mAdapter.setOnItemClickListener(mOnItemClickListener);
 		mRecyclerView.setAdapter(mAdapter);
 
-		final List<Book> books = new ArrayList<>();
-		for (int i = 0; i < 10; i++) {
-			Book book = new Book();
-			book.setName(String.valueOf(i));
-			books.add(book);
-		}
-		mAdapter.addAll(books);
+		RecyclerView.ItemDecoration divider = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+		mRecyclerView.addItemDecoration(divider);
 	}
 
 	@OnClick(R.id.iv_back)
@@ -115,8 +132,22 @@ public class SearchActivity extends AppCompatActivity {
 		onBackPressed();
 	}
 
-	private void search(String keyword) {
-
+	private void search(final String keyword) {
+		Observable.create(new ObservableOnSubscribe<List<Book>>() {
+			@Override
+			public void subscribe(ObservableEmitter<List<Book>> emitter) throws Exception {
+				emitter.onNext(mSite.search(keyword));
+				emitter.onComplete();
+			}
+		})
+				.compose(RxJavaUtil.<List<Book>>mainSchedulers())
+				.as(this.<List<Book>>bindLifecycle())
+				.subscribe(new BaseObserver<List<Book>>() {
+					@Override
+					public void onNext(List<Book> books) {
+						mAdapter.setData(books);
+					}
+				});
 	}
 
 }

@@ -1,10 +1,28 @@
 package com.shizy.bookreader.bean;
 
-import java.util.List;
-
 public class Chapter extends BaseBean {
 
 	private String name;
-	private List<String> contents;
+	private String url;
 
+	public Chapter(String name, String url) {
+		this.name = name;
+		this.url = url;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
 }

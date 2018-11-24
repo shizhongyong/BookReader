@@ -1,26 +1,26 @@
 package com.shizy.bookreader.site;
 
 import com.shizy.bookreader.bean.Book;
-import com.shizy.bookreader.bean.Catalog;
+import com.shizy.bookreader.bean.Chapter;
 
 import java.util.List;
 
 public abstract class Site {
 
-	public abstract List<Book> search(String bookName) throws Exception;
+	public abstract List<Book> search(String keyword) throws Exception;
 
-	public abstract List<Catalog> parseCatalog(String catalogHtml, String url);
+	public abstract List<Chapter> listChapters(String url) throws Exception;
 
-	public abstract List<String> parseContent(String chapterHtml);
+	public abstract List<String> listContent(String chapterUrl) throws Exception;
 
-	public abstract String getSiteName();
+	public abstract String getName();
 
-	public String getEncodeType() {
+	public String charset() {
 		return "gbk";
 	}
 
 	@Override
 	public String toString() {
-		return getSiteName();
+		return getName();
 	}
 }

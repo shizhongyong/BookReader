@@ -12,6 +12,7 @@ import com.shizy.bookreader.R;
 import com.shizy.bookreader.bean.Book;
 import com.shizy.bookreader.ui.base.adapter.BaseAdapter;
 import com.shizy.bookreader.ui.base.adapter.BaseViewHolder;
+import com.shizy.bookreader.util.ResourcesUtil;
 
 import butterknife.BindView;
 
@@ -24,23 +25,36 @@ public class SearchAdapter extends BaseAdapter<Book, SearchAdapter.ItemViewHolde
 	@NonNull
 	@Override
 	public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int position) {
-		View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_search_result, parent, false);
 		return new ItemViewHolder(this, view);
 	}
 
 	class ItemViewHolder extends BaseViewHolder<Book> {
 
-		@BindView(android.R.id.text1)
-		protected TextView mTextView;
+		@BindView(R.id.tv_name)
+		protected TextView mNameTv;
+		@BindView(R.id.tv_author)
+		protected TextView mAuthorTv;
+		@BindView(R.id.tv_latestChapter)
+		protected TextView mLatestChapterTv;
+		@BindView(R.id.tv_add)
+		protected TextView mAddTv;
 
 		public ItemViewHolder(BaseAdapter adapter, View itemView) {
 			super(adapter, itemView);
 		}
 
 		@Override
-		public void bindData(Book data) {
-			mTextView.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
-			mTextView.setText(data.getName());
+		public void bindData(Book book) {
+			mNameTv.setText(book.getName());
+			mAuthorTv.setText(ResourcesUtil.getString(R.string.format_author, book.getAuthor()));
+			mLatestChapterTv.setText(ResourcesUtil.getString(R.string.format_latest_chapter, book.getLatestChapter()));
+
+			mAddTv.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View view) {
+				}
+			});
 		}
 	}
 
