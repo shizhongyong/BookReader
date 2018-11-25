@@ -1,15 +1,29 @@
 package com.shizy.bookreader.bean;
 
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+import com.shizy.bookreader.db.dao.BookDao;
+
+@DatabaseTable(tableName = "book", daoClass = BookDao.class)
 public class Book extends BaseBean {
 
+	@DatabaseField(generatedId = true)
+	private long id;
+	@DatabaseField(uniqueCombo = true)
 	private String name;
+	@DatabaseField(uniqueCombo = true)
 	private String author;
+	@DatabaseField
 	private String url;
+	@DatabaseField
 	private String updateTime;
+	@DatabaseField
 	private String latestChapter;
+	@DatabaseField
 	private String size;
+	@DatabaseField
 	private String poster;
-
+	@DatabaseField
 	private String siteName;
 
 	public Book() {

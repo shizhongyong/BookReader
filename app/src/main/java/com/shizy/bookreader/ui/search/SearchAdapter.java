@@ -10,9 +10,14 @@ import android.widget.TextView;
 
 import com.shizy.bookreader.R;
 import com.shizy.bookreader.bean.Book;
+import com.shizy.bookreader.db.DatabaseHelper;
+import com.shizy.bookreader.db.dao.BookDao;
 import com.shizy.bookreader.ui.base.adapter.BaseAdapter;
 import com.shizy.bookreader.ui.base.adapter.BaseViewHolder;
 import com.shizy.bookreader.util.ResourcesUtil;
+import com.shizy.bookreader.util.UIUtil;
+
+import java.sql.SQLException;
 
 import butterknife.BindView;
 
@@ -45,7 +50,7 @@ public class SearchAdapter extends BaseAdapter<Book, SearchAdapter.ItemViewHolde
 		}
 
 		@Override
-		public void bindData(Book book) {
+		public void bindData(final Book book) {
 			mNameTv.setText(book.getName());
 			mAuthorTv.setText(ResourcesUtil.getString(R.string.format_author, book.getAuthor()));
 			mLatestChapterTv.setText(ResourcesUtil.getString(R.string.format_latest_chapter, book.getLatestChapter()));
@@ -53,9 +58,23 @@ public class SearchAdapter extends BaseAdapter<Book, SearchAdapter.ItemViewHolde
 			mAddTv.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View view) {
+					saveBook(book);
 				}
 			});
 		}
+
+		private void saveBook(Book book) {
+			try {
+				BookDao dao = DatabaseHelper.getHelper(mContext).getBookDao();
+				dao.createIfNotExists(book);
+				UIUtil.showToast(ResourcesUtil.getString(R.string.format_add_to_bookshelves, book.getName()));
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				DatabaseHelper.releaseHelper();
+			}
+		}
+
 	}
 
 }

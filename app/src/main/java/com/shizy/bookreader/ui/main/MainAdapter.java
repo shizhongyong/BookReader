@@ -1,7 +1,9 @@
 package com.shizy.bookreader.ui.main;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,15 +14,30 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.shizy.bookreader.R;
 import com.shizy.bookreader.bean.Book;
+import com.shizy.bookreader.db.DatabaseHelper;
+import com.shizy.bookreader.db.dao.BookDao;
 import com.shizy.bookreader.ui.base.adapter.BaseAdapter;
 import com.shizy.bookreader.ui.base.adapter.BaseViewHolder;
+import com.shizy.bookreader.util.ResourcesUtil;
+import com.shizy.bookreader.util.UIUtil;
+
+import java.sql.SQLException;
 
 import butterknife.BindView;
 
 public class MainAdapter extends BaseAdapter<Book, MainAdapter.ItemViewHolder> {
 
-	public MainAdapter(Context context) {
+	public interface ActionListener {
+
+		void removeBook(Book book);
+
+	}
+
+	private ActionListener mActionListener;
+
+	public MainAdapter(Context context, ActionListener listener) {
 		super(context);
+		mActionListener = listener;
 	}
 
 	@NonNull
@@ -48,7 +65,7 @@ public class MainAdapter extends BaseAdapter<Book, MainAdapter.ItemViewHolder> {
 		}
 
 		@Override
-		public void bindData(Book book) {
+		public void bindData(final Book book) {
 			if (!TextUtils.isEmpty(book.getPoster())) {
 				Glide.with(mContext).load(book.getPoster()).into(mPosterIv);
 			}
@@ -60,9 +77,12 @@ public class MainAdapter extends BaseAdapter<Book, MainAdapter.ItemViewHolder> {
 			mDeleteIv.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-
+					if (mActionListener != null) {
+						mActionListener.removeBook(book);
+					}
 				}
 			});
 		}
+
 	}
 }
