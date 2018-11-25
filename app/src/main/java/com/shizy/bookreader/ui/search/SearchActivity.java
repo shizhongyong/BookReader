@@ -1,7 +1,6 @@
 package com.shizy.bookreader.ui.search;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,10 +18,10 @@ import com.shizy.bookreader.site.SiteFactory;
 import com.shizy.bookreader.ui.base.BaseObserver;
 import com.shizy.bookreader.ui.base.activity.BaseActivity;
 import com.shizy.bookreader.ui.base.adapter.BaseAdapter;
-import com.shizy.bookreader.ui.content.ContentActivity;
+import com.shizy.bookreader.ui.content.ReadActivity;
 import com.shizy.bookreader.util.RxJavaUtil;
+import com.shizy.bookreader.util.UIUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -31,8 +30,6 @@ import butterknife.OnClick;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.observers.DisposableObserver;
 
 public class SearchActivity extends BaseActivity {
 
@@ -55,7 +52,7 @@ public class SearchActivity extends BaseActivity {
 		public void onItemClick(View view, int position) {
 			Book book = mAdapter.getItem(position);
 			if (book != null) {
-				ContentActivity.launch(SearchActivity.this, book);
+				ReadActivity.launch(SearchActivity.this, book);
 			}
 		}
 	};
@@ -106,6 +103,7 @@ public class SearchActivity extends BaseActivity {
 		mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 			@Override
 			public boolean onQueryTextSubmit(String s) {
+				UIUtil.hideSoftInput(getCurrentFocus());
 				search(s);
 				return true;
 			}

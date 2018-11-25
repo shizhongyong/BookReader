@@ -16,4 +16,10 @@
 	<string name="asc">正序</string>
 	<string name="desc">倒序</string>
 
+	<string name="decrease_font_size">A-</string>
+	<string name="increase_font_size">A+</string>
+
+	<string name="msg_first_chapter">到头了，前面没有了！</string>
+	<string name="msg_last_chapter">已经是最后一章了！</string>
+
 </resources>

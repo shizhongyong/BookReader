@@ -22,6 +22,7 @@ public class AppUtil {
 			throw new NullPointerException("Context is null");
 		}
 		mContext = context.getApplicationContext();
+		ScreenUtil.init(mContext);
 	}
 
 	public static Handler getMainHandler() {

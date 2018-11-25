@@ -11,8 +11,8 @@ public class SiteFactory {
 	private static final List<Site> SITES = new ArrayList<>();
 
 	static {
-		SITES.add(new Binhuo());
 		SITES.add(new Biquge());
+		SITES.add(new Binhuo());
 	}
 
 	private SiteFactory() {
