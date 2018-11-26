@@ -88,6 +88,8 @@ public class MainActivity extends BaseActivity {
 	protected NavigationView mNavView;
 	@BindView(R.id.recycler_view)
 	protected RecyclerView mRecyclerView;
+	@BindView(R.id.layout_empty)
+	protected View mEmptyView;
 
 	private MainAdapter mAdapter;
 	private long mLastBackTime;
@@ -172,7 +174,12 @@ public class MainActivity extends BaseActivity {
 		}
 	}
 
+	private void refreshEmptyView() {
+		mEmptyView.setVisibility(mAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+	}
+
 	private void loadData() {
+		showLoading();
 		Observable.create(new ObservableOnSubscribe<List<Book>>() {
 			@Override
 			public void subscribe(ObservableEmitter<List<Book>> emitter) throws Exception {
@@ -184,6 +191,7 @@ public class MainActivity extends BaseActivity {
 					emitter.onComplete();
 				} catch (SQLException e) {
 					e.printStackTrace();
+					emitter.onError(e);
 				} finally {
 					DatabaseHelper.releaseHelper();
 				}
@@ -195,6 +203,12 @@ public class MainActivity extends BaseActivity {
 					@Override
 					public void onNext(List<Book> books) {
 						mAdapter.setData(books);
+					}
+
+					@Override
+					protected void onFinally() {
+						hideLoading();
+						refreshEmptyView();
 					}
 				});
 

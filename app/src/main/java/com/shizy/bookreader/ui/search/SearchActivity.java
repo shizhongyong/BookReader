@@ -131,6 +131,10 @@ public class SearchActivity extends BaseActivity {
 	}
 
 	private void search(final String keyword) {
+		if (isLoading()) {
+			return;
+		}
+		showLoading();
 		Observable.create(new ObservableOnSubscribe<List<Book>>() {
 			@Override
 			public void subscribe(ObservableEmitter<List<Book>> emitter) throws Exception {
@@ -144,6 +148,11 @@ public class SearchActivity extends BaseActivity {
 					@Override
 					public void onNext(List<Book> books) {
 						mAdapter.setData(books);
+					}
+
+					@Override
+					protected void onFinally() {
+						hideLoading();
 					}
 				});
 	}

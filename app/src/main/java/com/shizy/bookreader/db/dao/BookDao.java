@@ -9,15 +9,15 @@ import java.sql.SQLException;
 
 public class BookDao extends BaseDaoImpl<Book, Integer> {
 
-	protected BookDao(Class<Book> dataClass) throws SQLException {
+	public BookDao(Class<Book> dataClass) throws SQLException {
 		super(dataClass);
 	}
 
-	protected BookDao(ConnectionSource connectionSource, Class<Book> dataClass) throws SQLException {
+	public BookDao(ConnectionSource connectionSource, Class<Book> dataClass) throws SQLException {
 		super(connectionSource, dataClass);
 	}
 
-	protected BookDao(ConnectionSource connectionSource, DatabaseTableConfig<Book> tableConfig) throws SQLException {
+	public BookDao(ConnectionSource connectionSource, DatabaseTableConfig<Book> tableConfig) throws SQLException {
 		super(connectionSource, tableConfig);
 	}
 

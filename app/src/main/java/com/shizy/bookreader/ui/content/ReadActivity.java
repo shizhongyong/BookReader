@@ -17,7 +17,6 @@ import android.widget.FrameLayout;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.shizy.bookreader.R;
 import com.shizy.bookreader.bean.Book;
@@ -53,8 +52,7 @@ public class ReadActivity extends BaseActivity {
 	private BaseAdapter.OnItemClickListener mOnItemClickListener = new BaseAdapter.OnItemClickListener() {
 		@Override
 		public void onItemClick(View view, int position) {
-			Chapter chapter = mChapterAdapter.getItem(position);
-			listContent(chapter);
+			openChapter(position);
 			mDrawerLayout.closeDrawer(Gravity.END);
 		}
 	};
@@ -269,6 +267,7 @@ public class ReadActivity extends BaseActivity {
 	}
 
 	private void listChapters() {
+		showLoading();
 		Observable.create(new ObservableOnSubscribe<List<Chapter>>() {
 			@Override
 			public void subscribe(ObservableEmitter<List<Chapter>> emitter) throws Exception {
@@ -285,6 +284,11 @@ public class ReadActivity extends BaseActivity {
 						updateCatalog();
 						openChapter(mChapterIndex);
 					}
+
+					@Override
+					protected void onFinally() {
+						hideLoading();
+					}
 				});
 	}
 
@@ -292,6 +296,7 @@ public class ReadActivity extends BaseActivity {
 		if (chapter == null) {
 			return;
 		}
+		showLoading();
 		Observable.create(new ObservableOnSubscribe<List<String>>() {
 			@Override
 			public void subscribe(ObservableEmitter<List<String>> emitter) throws Exception {
@@ -305,6 +310,11 @@ public class ReadActivity extends BaseActivity {
 					@Override
 					public void onNext(List<String> list) {
 						setChapterContent(chapter, list);
+					}
+
+					@Override
+					protected void onFinally() {
+						hideLoading();
 					}
 				});
 	}
