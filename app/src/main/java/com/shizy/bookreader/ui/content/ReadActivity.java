@@ -21,6 +21,8 @@ import android.widget.TextView;
 import com.shizy.bookreader.R;
 import com.shizy.bookreader.bean.Book;
 import com.shizy.bookreader.bean.Chapter;
+import com.shizy.bookreader.db.DatabaseHelper;
+import com.shizy.bookreader.db.dao.BookDao;
 import com.shizy.bookreader.site.Site;
 import com.shizy.bookreader.site.SiteFactory;
 import com.shizy.bookreader.ui.base.BaseObserver;
@@ -31,6 +33,7 @@ import com.shizy.bookreader.util.RxJavaUtil;
 import com.shizy.bookreader.util.ScreenUtil;
 import com.shizy.bookreader.util.UIUtil;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +55,7 @@ public class ReadActivity extends BaseActivity {
 	private BaseAdapter.OnItemClickListener mOnItemClickListener = new BaseAdapter.OnItemClickListener() {
 		@Override
 		public void onItemClick(View view, int position) {
-			openChapter(position);
+			readChapter(position);
 			mDrawerLayout.closeDrawer(Gravity.END);
 		}
 	};
@@ -136,8 +139,10 @@ public class ReadActivity extends BaseActivity {
 	private Site mSite;
 	private List<Chapter> mChapters;
 
+	private BookDao mBookDao;
+
 	private boolean isAsc = true;
-	private int mChapterIndex = 0;
+	private int mReadChapterIndex = 0;
 	private int mFontSize = FONT_SIZE_DEFAULT;
 
 	@Override
@@ -156,8 +161,20 @@ public class ReadActivity extends BaseActivity {
 			return;
 		}
 
+		try {
+			mBookDao = DatabaseHelper.getHelper(this).getBookDao();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 		initView();
 		listChapters();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		DatabaseHelper.releaseHelper();
 	}
 
 	private void initView() {
@@ -226,34 +243,33 @@ public class ReadActivity extends BaseActivity {
 		mRecyclerView.scrollToPosition(0);
 	}
 
-	private void openChapter(int index) {
-		if (mChapters == null || mChapters.size() == 0) {
+	private void readChapter(int index) {
+		if (mChapters == null || mChapters.size() == 0 || mChapters.size() <= index) {
 			return;
 		}
-		listContent(mChapters.get(index));
-		mChapterIndex = index;
+		listContent(mChapters.get(index), index);
 	}
 
 	private void previousChapter() {
 		if (mChapters == null || mChapters.size() == 0) {
 			return;
 		}
-		if (mChapterIndex == 0) {
+		if (mReadChapterIndex == 0) {
 			UIUtil.showToast(R.string.msg_first_chapter);
 			return;
 		}
-		openChapter(mChapterIndex - 1);
+		readChapter(mReadChapterIndex - 1);
 	}
 
 	private void nextChapter() {
 		if (mChapters == null || mChapters.size() == 0) {
 			return;
 		}
-		if (mChapterIndex >= mChapters.size() - 1) {
+		if (mReadChapterIndex >= mChapters.size() - 1) {
 			UIUtil.showToast(R.string.msg_last_chapter);
 			return;
 		}
-		openChapter(mChapterIndex + 1);
+		readChapter(mReadChapterIndex + 1);
 	}
 
 	private void setChapterContent(Chapter chapter, List<String> list) {
@@ -271,6 +287,9 @@ public class ReadActivity extends BaseActivity {
 		Observable.create(new ObservableOnSubscribe<List<Chapter>>() {
 			@Override
 			public void subscribe(ObservableEmitter<List<Chapter>> emitter) throws Exception {
+				if (mBookDao != null) {
+					mReadChapterIndex = mBookDao.queryReadChapter(mBook);
+				}
 				emitter.onNext(mSite.listChapters(mBook.getUrl()));
 				emitter.onComplete();
 			}
@@ -282,7 +301,7 @@ public class ReadActivity extends BaseActivity {
 					public void onNext(List<Chapter> chapters) {
 						mChapters = chapters;
 						updateCatalog();
-						openChapter(mChapterIndex);
+						readChapter(mReadChapterIndex);
 					}
 
 					@Override
@@ -292,7 +311,7 @@ public class ReadActivity extends BaseActivity {
 				});
 	}
 
-	private void listContent(final Chapter chapter) {
+	private void listContent(final Chapter chapter, final int index) {
 		if (chapter == null) {
 			return;
 		}
@@ -309,7 +328,9 @@ public class ReadActivity extends BaseActivity {
 				.subscribe(new BaseObserver<List<String>>() {
 					@Override
 					public void onNext(List<String> list) {
+						mReadChapterIndex = index;
 						setChapterContent(chapter, list);
+						updateReadChapter();
 					}
 
 					@Override
@@ -317,6 +338,23 @@ public class ReadActivity extends BaseActivity {
 						hideLoading();
 					}
 				});
+	}
+
+	private void updateReadChapter() {
+		Observable.create(new ObservableOnSubscribe<Boolean>() {
+			@Override
+			public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
+				if (mBookDao != null) {
+					emitter.onNext(mBookDao.updateReadChapter(mBook, mReadChapterIndex));
+					emitter.onComplete();
+				} else {
+					emitter.onError(new NullPointerException("mBookDao is null!"));
+				}
+			}
+		})
+				.compose(RxJavaUtil.<Boolean>ioSchedulers())
+				.as(this.<Boolean>bindLifecycle())
+				.subscribe();
 	}
 
 	public static void launch(Activity activity, Book book) {

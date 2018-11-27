@@ -7,17 +7,22 @@ import com.shizy.bookreader.db.dao.BookDao;
 @DatabaseTable(tableName = "book", daoClass = BookDao.class)
 public class Book extends BaseBean {
 
+	public static final String COLUMN_NAME = "name";
+	public static final String COLUMN_AUTHOR = "author";
+	public static final String COLUMN_LATEST_CHAPTER = "latest_chapter";
+	public static final String COLUMN_READ_CHAPTER = "read_chapter";
+
 	@DatabaseField(generatedId = true)
 	private long id;
-	@DatabaseField(uniqueCombo = true)
+	@DatabaseField(uniqueCombo = true, columnName = COLUMN_NAME)
 	private String name;
-	@DatabaseField(uniqueCombo = true)
+	@DatabaseField(uniqueCombo = true, columnName = COLUMN_AUTHOR)
 	private String author;
 	@DatabaseField
 	private String url;
 	@DatabaseField
 	private String updateTime;
-	@DatabaseField
+	@DatabaseField(columnName = COLUMN_LATEST_CHAPTER)
 	private String latestChapter;
 	@DatabaseField
 	private String size;
@@ -25,6 +30,8 @@ public class Book extends BaseBean {
 	private String poster;
 	@DatabaseField
 	private String siteName;
+	@DatabaseField(defaultValue = "0", columnName = COLUMN_READ_CHAPTER)
+	private int readChapter;// 保存读到的位置
 
 	public Book() {
 	}
@@ -102,5 +109,13 @@ public class Book extends BaseBean {
 
 	public void setSiteName(String siteName) {
 		this.siteName = siteName;
+	}
+
+	public int getReadChapter() {
+		return readChapter;
+	}
+
+	public void setReadChapter(int readChapter) {
+		this.readChapter = readChapter;
 	}
 }

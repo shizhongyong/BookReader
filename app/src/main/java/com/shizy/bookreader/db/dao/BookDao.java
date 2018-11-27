@@ -1,11 +1,16 @@
 package com.shizy.bookreader.db.dao;
 
 import com.j256.ormlite.dao.BaseDaoImpl;
+import com.j256.ormlite.stmt.UpdateBuilder;
+import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.DatabaseTableConfig;
 import com.shizy.bookreader.bean.Book;
 
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BookDao extends BaseDaoImpl<Book, Integer> {
 
@@ -19,6 +24,73 @@ public class BookDao extends BaseDaoImpl<Book, Integer> {
 
 	public BookDao(ConnectionSource connectionSource, DatabaseTableConfig<Book> tableConfig) throws SQLException {
 		super(connectionSource, tableConfig);
+	}
+
+	/**
+	 * 查询最后阅读位置
+	 *
+	 * @param book
+	 * @return
+	 */
+	public int queryReadChapter(Book book) {
+		if (book != null) {
+			try {
+				Map<String, Object> fieldValues = new HashMap<>();
+				fieldValues.put(Book.COLUMN_NAME, book.getName());
+				fieldValues.put(Book.COLUMN_AUTHOR, book.getAuthor());
+
+				List<Book> result = queryForFieldValues(fieldValues);
+				if (result != null && result.size() > 0) {
+					return result.get(0).getReadChapter();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * 更新最后阅读位置
+	 *
+	 * @param book
+	 * @param readChapter
+	 * @return
+	 */
+	public boolean updateReadChapter(Book book, int readChapter) {
+		return updateColumnValue(book, Book.COLUMN_READ_CHAPTER, readChapter);
+	}
+
+	/**
+	 * 更新最新章节
+	 *
+	 * @param book
+	 * @param latestChapter
+	 * @return
+	 */
+	public boolean updateLatestChapter(Book book, String latestChapter) {
+		return updateColumnValue(book, Book.COLUMN_LATEST_CHAPTER, latestChapter);
+	}
+
+	private boolean updateColumnValue(Book book, String columnName, Object value) {
+		if (book == null) {
+			return false;
+		}
+		try {
+			UpdateBuilder<Book, Integer> ub = updateBuilder();
+			Where<Book, Integer> where = ub.where();
+
+			where.eq(Book.COLUMN_NAME, book.getName());
+			where.and();
+			where.eq(Book.COLUMN_AUTHOR, book.getAuthor());
+
+			ub.updateColumnValue(columnName, value);
+
+			return ub.update() > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 }
