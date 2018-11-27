@@ -55,7 +55,9 @@ public class ReadActivity extends BaseActivity {
 	private BaseAdapter.OnItemClickListener mOnItemClickListener = new BaseAdapter.OnItemClickListener() {
 		@Override
 		public void onItemClick(View view, int position) {
-			readChapter(position);
+			// position有正序和倒序之分
+			final int index = mChapters.indexOf(mChapterAdapter.getItem(position));
+			readChapter(index);
 			mDrawerLayout.closeDrawer(Gravity.END);
 		}
 	};
@@ -126,6 +128,8 @@ public class ReadActivity extends BaseActivity {
 	protected ScrollView mScrollView;
 	@BindView(R.id.tv_content)
 	protected TextView mContentTv;
+	@BindView(R.id.catalog)
+	protected ViewGroup mCatalogLayout;
 	@BindView(R.id.tv_order)
 	protected TextView mOrderTv;
 	@BindView(R.id.recycler_view)
@@ -192,6 +196,10 @@ public class ReadActivity extends BaseActivity {
 	}
 
 	private void initCatalogView() {
+		ViewGroup.LayoutParams params = mCatalogLayout.getLayoutParams();
+		params.width = (int) (ScreenUtil.screenWidth() * 0.68);
+		mCatalogLayout.setLayoutParams(params);
+
 		mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 		mChapterAdapter = new ChapterAdapter(this);
 		mChapterAdapter.setOnItemClickListener(mOnItemClickListener);
@@ -328,8 +336,9 @@ public class ReadActivity extends BaseActivity {
 				.subscribe(new BaseObserver<List<String>>() {
 					@Override
 					public void onNext(List<String> list) {
-						mReadChapterIndex = index;
 						setChapterContent(chapter, list);
+						mReadChapterIndex = index;
+						mChapterAdapter.setCurrentChapter(chapter);
 						updateReadChapter();
 					}
 
