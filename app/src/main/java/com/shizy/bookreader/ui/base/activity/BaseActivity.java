@@ -1,5 +1,6 @@
 package com.shizy.bookreader.ui.base.activity;
 
+import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -24,6 +25,16 @@ public abstract class BaseActivity extends AppCompatActivity {
 	protected View mLoadingView;
 
 	private AtomicInteger mLoadingCount = new AtomicInteger(0);
+
+	protected void setStatusBarColor(@ColorInt int color) {
+		getWindow().setStatusBarColor(color);
+	}
+
+	protected void setSystemUiVisibility(int visibility) {
+		View decorView = getWindow().getDecorView();
+		int flags = decorView.getSystemUiVisibility();
+		decorView.setSystemUiVisibility(flags | visibility);
+	}
 
 	@Override
 	public void setContentView(View view) {
