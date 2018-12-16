@@ -17,14 +17,18 @@ public abstract class BaseObserver<T> extends DisposableObserver<T> {
 
 	@Override
 	public final void onError(Throwable e) {
-		UIUtil.showToast(e.getMessage());
 		if (BuildConfig.DEBUG) {
 			e.printStackTrace();
 		}
+		onFailure(e);
 		if (!isDisposed()) {
 			dispose();
 		}
 		onFinally();
+	}
+
+	protected void onFailure(Throwable e) {
+		UIUtil.showToast(e.getMessage());
 	}
 
 	protected void onFinally() {

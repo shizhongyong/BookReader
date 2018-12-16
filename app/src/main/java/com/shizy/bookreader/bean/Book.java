@@ -9,8 +9,10 @@ public class Book extends BaseBean {
 
 	public static final String COLUMN_NAME = "name";
 	public static final String COLUMN_AUTHOR = "author";
+	public static final String COLUMN_URL = "url";
 	public static final String COLUMN_LATEST_CHAPTER = "latest_chapter";
 	public static final String COLUMN_READ_CHAPTER = "read_chapter";
+	public static final String COLUMN_SITE_NAME = "site_name";
 
 	@DatabaseField(generatedId = true)
 	private long id;
@@ -18,7 +20,7 @@ public class Book extends BaseBean {
 	private String name;
 	@DatabaseField(uniqueCombo = true, columnName = COLUMN_AUTHOR)
 	private String author;
-	@DatabaseField
+	@DatabaseField(columnName = COLUMN_URL)
 	private String url;
 	@DatabaseField
 	private String updateTime;
@@ -28,7 +30,7 @@ public class Book extends BaseBean {
 	private String size;
 	@DatabaseField
 	private String poster;
-	@DatabaseField
+	@DatabaseField(columnName = COLUMN_SITE_NAME)
 	private String siteName;
 	@DatabaseField(defaultValue = "0", columnName = COLUMN_READ_CHAPTER)
 	private int readChapter;// 保存读到的位置

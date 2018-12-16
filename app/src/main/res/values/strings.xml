@@ -11,11 +11,15 @@
 	<string name="confirm">确定</string>
 	<string name="remove">移出</string>
 	<string name="search">搜索</string>
+	<string name="retry">重试</string>
+	<string name="change_source">换源</string>
 
 	<string name="loading">加载中…</string>
+	<string name="load_failed">加载失败，请重试</string>
 	<string name="list_empty">暂无内容</string>
 	<string name="change_site">换个站点</string>
 	<string name="search_result_empty">未找到？换个站点试试</string>
+	<string name="format_not_found_book">未找到《%1$s》</string>
 
 	<string name="hint_search_keyword">请输入书名</string>
 	<string name="add_to_bookshelves">加入书架</string>

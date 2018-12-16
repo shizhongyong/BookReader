@@ -58,7 +58,13 @@ public class BookDao extends BaseDaoImpl<Book, Integer> {
 	 * @return
 	 */
 	public boolean updateReadChapter(Book book, int readChapter) {
-		return updateColumnValue(book, Book.COLUMN_READ_CHAPTER, readChapter);
+		return updateColumnValue(book, new String[]{Book.COLUMN_READ_CHAPTER}, new Integer[]{readChapter});
+	}
+
+	public boolean updateBookSite(Book book) {
+		final String[] names = {Book.COLUMN_URL, Book.COLUMN_SITE_NAME};
+		final Object[] values = {book.getUrl(), book.getSiteName()};
+		return updateColumnValue(book, names, values);
 	}
 
 	/**
@@ -69,11 +75,17 @@ public class BookDao extends BaseDaoImpl<Book, Integer> {
 	 * @return
 	 */
 	public boolean updateLatestChapter(Book book, String latestChapter) {
-		return updateColumnValue(book, Book.COLUMN_LATEST_CHAPTER, latestChapter);
+		return updateColumnValue(book, new String[]{Book.COLUMN_LATEST_CHAPTER}, new String[]{latestChapter});
 	}
 
-	private boolean updateColumnValue(Book book, String columnName, Object value) {
+	private boolean updateColumnValue(Book book, String[] columnNames, Object[] values) {
 		if (book == null) {
+			return false;
+		}
+		if (columnNames == null || values == null) {
+			return false;
+		}
+		if (columnNames.length != values.length) {
 			return false;
 		}
 		try {
@@ -84,7 +96,9 @@ public class BookDao extends BaseDaoImpl<Book, Integer> {
 			where.and();
 			where.eq(Book.COLUMN_AUTHOR, book.getAuthor());
 
-			ub.updateColumnValue(columnName, value);
+			for (int i = 0; i < columnNames.length; i++) {
+				ub.updateColumnValue(columnNames[i], values[i]);
+			}
 
 			return ub.update() > 0;
 		} catch (SQLException e) {

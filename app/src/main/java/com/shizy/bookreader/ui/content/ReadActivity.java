@@ -1,12 +1,15 @@
 package com.shizy.bookreader.ui.content;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -28,6 +31,7 @@ import com.shizy.bookreader.site.SiteFactory;
 import com.shizy.bookreader.ui.base.BaseObserver;
 import com.shizy.bookreader.ui.base.activity.BaseActivity;
 import com.shizy.bookreader.ui.base.adapter.BaseAdapter;
+import com.shizy.bookreader.ui.search.SiteListAdapter;
 import com.shizy.bookreader.util.ClickUtil;
 import com.shizy.bookreader.util.RxJavaUtil;
 import com.shizy.bookreader.util.ScreenUtil;
@@ -58,7 +62,7 @@ public class ReadActivity extends BaseActivity {
 			// position有正序和倒序之分
 			final int index = mChapters.indexOf(mChapterAdapter.getItem(position));
 			readChapter(index);
-			mDrawerLayout.closeDrawer(Gravity.END);
+			mDrawerLayout.closeDrawer(Gravity.START);
 		}
 	};
 
@@ -93,10 +97,10 @@ public class ReadActivity extends BaseActivity {
 			}
 			if (mButtonLayout.getVisibility() == View.GONE) {
 				final int downX = (int) e.getX();
-				final int splitWidth = ScreenUtil.screenWidth() / 3;
-				if (downX < splitWidth) {
+				final int splitWidth = ScreenUtil.screenWidth() / 9;// 左：中：右 === 2：3：4
+				if (downX < splitWidth * 2) {
 					previousChapter();
-				} else if (downX > splitWidth * 2) {
+				} else if (downX > splitWidth * 5) {
 					nextChapter();
 				} else {
 					mTopLayout.setVisibility(View.VISIBLE);
@@ -134,6 +138,9 @@ public class ReadActivity extends BaseActivity {
 	protected TextView mOrderTv;
 	@BindView(R.id.recycler_view)
 	protected RecyclerView mRecyclerView;
+
+	@BindView(R.id.layout_failed)
+	protected ViewGroup mFailedLayout;
 
 	private GestureDetector mGestureDetector;
 
@@ -206,7 +213,7 @@ public class ReadActivity extends BaseActivity {
 		mRecyclerView.setAdapter(mChapterAdapter);
 	}
 
-	@OnClick({R.id.iv_back, R.id.btn_decrease, R.id.btn_increase, R.id.tv_order})
+	@OnClick({R.id.iv_back, R.id.btn_decrease, R.id.btn_increase, R.id.tv_order, R.id.tv_retry, R.id.tv_change_source})
 	protected void onClick(View view) {
 		if (!ClickUtil.isValid()) {
 			return;
@@ -227,7 +234,46 @@ public class ReadActivity extends BaseActivity {
 				isAsc = !isAsc;
 				updateCatalog();
 				break;
+			case R.id.tv_retry:
+				retry();
+				break;
+			case R.id.tv_change_source:
+				showSitesDialog();
+				break;
 		}
+	}
+
+	private void showFailedView(boolean show) {
+		mFailedLayout.setVisibility(show ? View.VISIBLE : View.GONE);
+	}
+
+	private void retry() {
+		showFailedView(false);
+		if (mChapters == null || mChapters.isEmpty()) {
+			listChapters();
+		} else {
+			readChapter(mReadChapterIndex);
+		}
+	}
+
+	private void showSitesDialog() {
+		final List<Site> sites = SiteFactory.getAllSites();
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.change_site)
+				.setSingleChoiceItems(new SiteListAdapter(this, sites, mSite), 0,
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								dialog.dismiss();
+								final Site site = sites.get(which);
+								if (mSite.equals(site)) {
+									return;
+								}
+
+								changeSite(site);
+							}
+						})
+				.show();
 	}
 
 	private void updateFontSize() {
@@ -290,6 +336,54 @@ public class ReadActivity extends BaseActivity {
 		mTitleTv.setText(chapter.getName());
 	}
 
+	private void changeSite(final Site site) {
+		showLoading();
+		Observable.create(new ObservableOnSubscribe<List<Book>>() {
+			@Override
+			public void subscribe(ObservableEmitter<List<Book>> emitter) throws Exception {
+				emitter.onNext(site.search(mBook.getName()));
+				emitter.onComplete();
+			}
+		})
+				.compose(RxJavaUtil.<List<Book>>mainSchedulers())
+				.as(this.<List<Book>>bindLifecycle())
+				.subscribe(new BaseObserver<List<Book>>() {
+					@Override
+					public void onNext(List<Book> books) {
+						Book bookInNewSite = null;
+						if (books != null && !books.isEmpty()) {
+							for (Book book : books) {
+								if (TextUtils.equals(book.getName(), mBook.getName()) && TextUtils.equals(book.getAuthor(), mBook.getAuthor())) {
+									bookInNewSite = book;
+									break;
+								}
+							}
+						}
+						if (bookInNewSite != null) {
+							updateBookSite(bookInNewSite);
+							mBook = bookInNewSite;
+							retry();
+						} else {
+							notFound();
+						}
+					}
+
+					@Override
+					protected void onFailure(Throwable e) {
+						notFound();
+					}
+
+					private void notFound() {
+						UIUtil.showToast(getString(R.string.format_not_found_book, mBook.getName()));
+					}
+
+					@Override
+					protected void onFinally() {
+						hideLoading();
+					}
+				});
+	}
+
 	private void listChapters() {
 		showLoading();
 		Observable.create(new ObservableOnSubscribe<List<Chapter>>() {
@@ -310,6 +404,12 @@ public class ReadActivity extends BaseActivity {
 						mChapters = chapters;
 						updateCatalog();
 						readChapter(mReadChapterIndex);
+					}
+
+					@Override
+					protected void onFailure(Throwable e) {
+						super.onFailure(e);
+						showFailedView(true);
 					}
 
 					@Override
@@ -343,6 +443,13 @@ public class ReadActivity extends BaseActivity {
 					}
 
 					@Override
+					protected void onFailure(Throwable e) {
+						super.onFailure(e);
+						mContentTv.setText(null);
+						showFailedView(true);
+					}
+
+					@Override
 					protected void onFinally() {
 						hideLoading();
 					}
@@ -355,6 +462,23 @@ public class ReadActivity extends BaseActivity {
 			public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
 				if (mBookDao != null) {
 					emitter.onNext(mBookDao.updateReadChapter(mBook, mReadChapterIndex));
+					emitter.onComplete();
+				} else {
+					emitter.onError(new NullPointerException("mBookDao is null!"));
+				}
+			}
+		})
+				.compose(RxJavaUtil.<Boolean>ioSchedulers())
+				.as(this.<Boolean>bindLifecycle())
+				.subscribe();
+	}
+
+	private void updateBookSite(final Book book) {
+		Observable.create(new ObservableOnSubscribe<Boolean>() {
+			@Override
+			public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
+				if (mBookDao != null) {
+					emitter.onNext(mBookDao.updateBookSite(book));
 					emitter.onComplete();
 				} else {
 					emitter.onError(new NullPointerException("mBookDao is null!"));
