@@ -5,7 +5,7 @@
     android:id="@+id/top_layout"
     android:layout_width="match_parent"
     android:layout_height="?android:attr/actionBarSize"
-    android:background="@color/colorPrimaryDark"
+    android:background="@android:color/black"
     android:gravity="center_vertical"
     android:orientation="vertical"
     android:paddingLeft="@dimen/activity_horizontal_margin"
