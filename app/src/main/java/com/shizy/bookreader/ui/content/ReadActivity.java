@@ -106,10 +106,12 @@ public class ReadActivity extends BaseActivity {
 				} else {
 					mTopLayout.setVisibility(View.VISIBLE);
 					mButtonLayout.setVisibility(View.VISIBLE);
+					mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 				}
 			} else {
 				mTopLayout.setVisibility(View.GONE);
 				mButtonLayout.setVisibility(View.GONE);
+				mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
 			}
 			return true;
 		}
