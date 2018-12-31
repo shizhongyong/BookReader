@@ -11,6 +11,7 @@ public class Book extends BaseBean {
 	public static final String COLUMN_AUTHOR = "author";
 	public static final String COLUMN_URL = "url";
 	public static final String COLUMN_LATEST_CHAPTER = "latest_chapter";
+	public static final String COLUMN_CHAPTER_UPDATE_TIME = "chapter_update_time";
 	public static final String COLUMN_READ_CHAPTER = "read_chapter";
 	public static final String COLUMN_SITE_NAME = "site_name";
 
@@ -26,6 +27,8 @@ public class Book extends BaseBean {
 	private String updateTime;
 	@DatabaseField(columnName = COLUMN_LATEST_CHAPTER)
 	private String latestChapter;
+	@DatabaseField(columnName = COLUMN_CHAPTER_UPDATE_TIME)
+	private long chapterUpdateTime;
 	@DatabaseField
 	private String size;
 	@DatabaseField
@@ -47,6 +50,7 @@ public class Book extends BaseBean {
 		this.size = size;
 		this.poster = poster;
 		this.siteName = siteName;
+		this.chapterUpdateTime = System.currentTimeMillis();
 	}
 
 	public String getName() {
@@ -95,6 +99,14 @@ public class Book extends BaseBean {
 
 	public void setLatestChapter(String latestChapter) {
 		this.latestChapter = latestChapter;
+	}
+
+	public long getChapterUpdateTime() {
+		return chapterUpdateTime;
+	}
+
+	public void setChapterUpdateTime(long chapterUpdateTime) {
+		this.chapterUpdateTime = chapterUpdateTime;
 	}
 
 	public String getSize() {

@@ -17,8 +17,11 @@ import android.view.View;
 
 import com.shizy.bookreader.R;
 import com.shizy.bookreader.bean.Book;
+import com.shizy.bookreader.bean.Chapter;
 import com.shizy.bookreader.db.DatabaseHelper;
 import com.shizy.bookreader.db.dao.BookDao;
+import com.shizy.bookreader.site.Site;
+import com.shizy.bookreader.site.SiteFactory;
 import com.shizy.bookreader.ui.base.BaseObserver;
 import com.shizy.bookreader.ui.base.activity.BaseActivity;
 import com.shizy.bookreader.ui.base.adapter.BaseAdapter;
@@ -94,18 +97,32 @@ public class MainActivity extends BaseActivity {
 	private MainAdapter mAdapter;
 	private long mLastBackTime;
 
+	private BookDao mBookDao;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
 		initView();
+
+		try {
+			mBookDao = DatabaseHelper.getHelper(this).getBookDao();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		loadData();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		DatabaseHelper.releaseHelper();
 	}
 
 	private void initView() {
@@ -183,17 +200,13 @@ public class MainActivity extends BaseActivity {
 		Observable.create(new ObservableOnSubscribe<List<Book>>() {
 			@Override
 			public void subscribe(ObservableEmitter<List<Book>> emitter) throws Exception {
-				try {
-					BookDao dao = DatabaseHelper.getHelper(MainActivity.this).getBookDao();
-					List<Book> list = dao.queryForAll();
+				if (mBookDao != null) {
+					List<Book> list = mBookDao.queryForAll();
 					Collections.reverse(list);
 					emitter.onNext(list);
 					emitter.onComplete();
-				} catch (SQLException e) {
-					e.printStackTrace();
-					emitter.onError(e);
-				} finally {
-					DatabaseHelper.releaseHelper();
+				} else {
+					emitter.onError(new NullPointerException("mBookDao is null!"));
 				}
 			}
 		})
@@ -203,6 +216,7 @@ public class MainActivity extends BaseActivity {
 					@Override
 					public void onNext(List<Book> books) {
 						mAdapter.setData(books);
+						updateLatestChapter(books);
 					}
 
 					@Override
@@ -211,6 +225,40 @@ public class MainActivity extends BaseActivity {
 						refreshEmptyView();
 					}
 				});
+
+	}
+
+	private void updateLatestChapter(final List<Book> books) {
+		if (mBookDao == null || books == null || books.isEmpty()) {
+			return;
+		}
+
+		Observable.create(new ObservableOnSubscribe<Boolean>() {
+			@Override
+			public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
+				long currentTimeMillis = System.currentTimeMillis();
+				final long updateInterval = 60 * 60 * 1000;// 每小时刷新一次最新章节
+				for (Book book : books) {
+					if (currentTimeMillis - book.getChapterUpdateTime() > updateInterval) {
+						Site site = SiteFactory.getSiteByName(book.getSiteName());
+						if (site == null) {
+							continue;
+						}
+						List<Chapter> chapters = site.listChapters(book.getUrl());
+						if (chapters != null && !chapters.isEmpty()) {
+							String latestChapter = chapters.get(chapters.size() - 1).getName();
+							mBookDao.updateLatestChapter(book, latestChapter);
+						}
+					}
+				}
+
+				emitter.onNext(true);
+				emitter.onComplete();
+			}
+		})
+				.compose(RxJavaUtil.<Boolean>ioSchedulers())
+				.as(this.<Boolean>bindLifecycle())
+				.subscribe();
 
 	}
 

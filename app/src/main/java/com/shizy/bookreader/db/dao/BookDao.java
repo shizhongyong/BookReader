@@ -75,7 +75,8 @@ public class BookDao extends BaseDaoImpl<Book, Integer> {
 	 * @return
 	 */
 	public boolean updateLatestChapter(Book book, String latestChapter) {
-		return updateColumnValue(book, new String[]{Book.COLUMN_LATEST_CHAPTER}, new String[]{latestChapter});
+		return updateColumnValue(book, new String[]{Book.COLUMN_LATEST_CHAPTER, Book.COLUMN_CHAPTER_UPDATE_TIME},
+				new Object[]{latestChapter, String.valueOf(System.currentTimeMillis())});
 	}
 
 	private boolean updateColumnValue(Book book, String[] columnNames, Object[] values) {

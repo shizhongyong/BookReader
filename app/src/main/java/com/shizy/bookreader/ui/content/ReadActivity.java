@@ -403,6 +403,7 @@ public class ReadActivity extends BaseActivity {
 					public void onNext(List<Chapter> chapters) {
 						mChapters = chapters;
 						updateCatalog();
+						updateLatestChapter();
 						readChapter(mReadChapterIndex);
 					}
 
@@ -454,6 +455,24 @@ public class ReadActivity extends BaseActivity {
 						hideLoading();
 					}
 				});
+	}
+
+	private void updateLatestChapter() {
+		Observable.create(new ObservableOnSubscribe<Boolean>() {
+			@Override
+			public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
+				if (mBookDao != null && mChapters != null && !mChapters.isEmpty()) {
+					String latestChapter = mChapters.get(mChapters.size() - 1).getName();
+					emitter.onNext(mBookDao.updateLatestChapter(mBook, latestChapter));
+					emitter.onComplete();
+				} else {
+					emitter.onError(new NullPointerException("mBookDao is null!"));
+				}
+			}
+		})
+				.compose(RxJavaUtil.<Boolean>ioSchedulers())
+				.as(this.<Boolean>bindLifecycle())
+				.subscribe();
 	}
 
 	private void updateReadChapter() {
