@@ -365,8 +365,7 @@ public class ReadActivity extends BaseActivity {
 							}
 						}
 						if (bookInNewSite != null) {
-							updateBookSite(bookInNewSite);
-							mBook = bookInNewSite;
+							updateBookSite(site, bookInNewSite);
 							retry();
 						} else {
 							notFound();
@@ -497,12 +496,15 @@ public class ReadActivity extends BaseActivity {
 				.subscribe();
 	}
 
-	private void updateBookSite(final Book book) {
+	private void updateBookSite(final Site site, final Book bookInNewSite) {
+		mSite = site;
+		mBook.setUrl(bookInNewSite.getUrl());
+		mBook.setSiteName(bookInNewSite.getSiteName());
 		Observable.create(new ObservableOnSubscribe<Boolean>() {
 			@Override
 			public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
 				if (mBookDao != null) {
-					emitter.onNext(mBookDao.updateBookSite(book));
+					emitter.onNext(mBookDao.updateBookSite(bookInNewSite));
 					emitter.onComplete();
 				} else {
 					emitter.onError(new NullPointerException("mBookDao is null!"));

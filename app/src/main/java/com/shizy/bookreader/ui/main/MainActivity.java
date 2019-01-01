@@ -239,16 +239,20 @@ public class MainActivity extends BaseActivity {
 				long currentTimeMillis = System.currentTimeMillis();
 				final long updateInterval = 60 * 60 * 1000;// 每小时刷新一次最新章节
 				for (Book book : books) {
-					if (currentTimeMillis - book.getChapterUpdateTime() > updateInterval) {
-						Site site = SiteFactory.getSiteByName(book.getSiteName());
-						if (site == null) {
-							continue;
+					try {
+						if (currentTimeMillis - book.getChapterUpdateTime() > updateInterval) {
+							Site site = SiteFactory.getSiteByName(book.getSiteName());
+							if (site == null) {
+								continue;
+							}
+							List<Chapter> chapters = site.listChapters(book.getUrl());
+							if (chapters != null && !chapters.isEmpty()) {
+								String latestChapter = chapters.get(chapters.size() - 1).getName();
+								mBookDao.updateLatestChapter(book, latestChapter);
+							}
 						}
-						List<Chapter> chapters = site.listChapters(book.getUrl());
-						if (chapters != null && !chapters.isEmpty()) {
-							String latestChapter = chapters.get(chapters.size() - 1).getName();
-							mBookDao.updateLatestChapter(book, latestChapter);
-						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 
