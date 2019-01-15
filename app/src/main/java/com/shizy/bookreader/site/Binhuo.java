@@ -21,13 +21,13 @@ public class Binhuo extends Site {
 
 	private static final String SITE_NAME = "冰火中文";
 	private static final String SITE_HOME = "https://www.binhuo.com";
+	private static final String PATH_SEARCH = "/modules/article/search.php";
 
 	@Override
 	public List<Book> search(String keyword) throws Exception {
-		final String url = "https://www.binhuo.com/modules/article/search.php";
 		final String key = "searchkey";
 
-		Connection conn = Jsoup.connect(url)
+		Connection conn = Jsoup.connect(SITE_HOME + PATH_SEARCH)
 				.userAgent(NetUtil.USER_AGENT)
 				.data(key, keyword);
 

@@ -18,14 +18,15 @@ import java.util.List;
 public class Biquge extends Site {
 
 	private static final String SITE_NAME = "笔趣阁";
-	private static final String SITE_HOME = "http://www.biquge.com.tw";
+	private static final String SITE_HOME = "http://www.biquyun.com";
+//	private static final String SITE_HOME = "http://www.biquge.com.tw";
+	private static final String PATH_SEARCH = "/modules/article/soshu.php";
 
 	@Override
 	public List<Book> search(String keyword) throws Exception {
-		String url = "http://www.biquge.com.tw/modules/article/soshu.php";
-		String key = "searchkey";
+		final String key = "searchkey";
 
-		Connection conn = Jsoup.connect(url)
+		Connection conn = Jsoup.connect(SITE_HOME + PATH_SEARCH)
 				.userAgent(NetUtil.USER_AGENT)
 				.data(key, keyword);
 		Connection.Request request = conn.request();
